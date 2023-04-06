@@ -81,10 +81,17 @@ def purchasePlaces():
     places_required = int(request.form['places'])
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-places_required
 
+    # check if club as enough points
+    if int(club['points']) == 0 or int(club['points']) - places_required*point_per_place < 0:
+        flash("Your club doesn't have enough point !")
+        return render_template('welcome.html', club=club, competitions=all_competitions)
+
+    # check if the competion is passed
     if has_happened(competition):
         flash("This competition already happened !")
         return render_template('welcome.html', club=club, competitions=all_competitions)
 
+    # check if the number of booking is higher than 12 places
     try:
         if competition["Reservations"][club["name"]] + places_required*point_per_place <= 12:
             competition["Reservations"][club["name"]] += places_required
@@ -105,8 +112,6 @@ def purchasePlaces():
     flash(f"Great Booking complete! Your purchased {places_required*point_per_place} for the competition {competition['name']}!")
     return render_template('welcome.html', club=club, competitions=all_competitions) 
 
-    # check if club as enough points
-    
     # check if there is enough place available  
 
 @app.route("/points_display_board", methods=['GET'])
