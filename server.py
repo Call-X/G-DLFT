@@ -54,14 +54,23 @@ clubs = loadClubs()
 app = Flask(__name__)
 app.secret_key = '192b9bdd12ab9ad4d12e236c78afcc9a343ec15f71bbf5dc987d54727823xcbf'
 
+@app.errorhandler(500)
+def internal_server_error(e):
+    # note that we set the 500 status explicitly
+    return render_template("500.html"), 500
+
 @app.route("/")
 def index():
     return render_template('index.html')
 
 @app.route("/showSummary",methods=['POST'])
 def showSummary():
-    club = [club for club in clubs if club['email'] == request.form['email']][0]
-    return render_template('welcome.html',club=club,competitions=all_competitions)
+    try:
+        club = [club for club in clubs if club['email'] == request.form['email']][0]
+    except IndexError:
+        error = True
+        return render_template('500.html', error=error)
+    return render_template('welcome.html', club=club, competitions=all_competitions, club_list=clubs)
     
 @app.route("/book/<competition>/<club>")
 def book(competition,club):
