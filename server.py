@@ -42,6 +42,12 @@ def serializeCompetition(comp_to_save, filename="competitions.json"):
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
+        
+def has_happened(competition):
+    competition_date = competition['date'].split(" ")[0]
+    year, month, day = competition_date.split("-")
+    if datetime.datetime(int(year), int(month), int(day)) < datetime.datetime.now():
+        return True
     
 all_competitions = loadCompetitions()
 clubs = loadClubs()
@@ -73,8 +79,14 @@ def purchasePlaces():
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     places_required = int(request.form['places'])
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-places_required
-    flash('Great-booking complete!')
-    return render_template('welcome.html', club=club, competitions=all_competitions)
+
+    if has_happened(competition):
+        print("5")
+        flash("This competition already happened !")
+        return render_template('welcome.html', club=club, competitions=all_competitions)
+    else:
+        flash('Great-booking complete!')
+        return render_template('welcome.html', club=club, competitions=all_competitions)
 
     # check if club as enough points
     
