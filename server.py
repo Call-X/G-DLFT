@@ -54,23 +54,14 @@ clubs = loadClubs()
 app = Flask(__name__)
 app.secret_key = '192b9bdd12ab9ad4d12e236c78afcc9a343ec15f71bbf5dc987d54727823xcbf'
 
-@app.errorhandler(500)
-def internal_server_error(e):
-    # note that we set the 500 status explicitly
-    return render_template("500.html"), 500
-
 @app.route("/")
 def index():
     return render_template('index.html')
 
 @app.route("/showSummary",methods=['POST'])
 def showSummary():
-    try:
-        club = [club for club in clubs if club['email'] == request.form['email']][0]
-    except IndexError:
-        error = True
-        return render_template('500.html', error=error)
-    return render_template('welcome.html', club=club, competitions=all_competitions, club_list=clubs)
+    club = [club for club in clubs if club['email'] == request.form['email']][0]
+    return render_template('welcome.html',club=club,competitions=all_competitions)
     
 @app.route("/book/<competition>/<club>")
 def book(competition,club):
@@ -90,17 +81,10 @@ def purchasePlaces():
     places_required = int(request.form['places'])
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-places_required
 
-    # check if club as enough points
-    if int(club['points']) == 0 or int(club['points']) - places_required*point_per_place < 0:
-        flash("Your club doesn't have enough point !")
-        return render_template('welcome.html', club=club, competitions=all_competitions)
-
-    # check if the competion is passed
     if has_happened(competition):
         flash("This competition already happened !")
         return render_template('welcome.html', club=club, competitions=all_competitions)
 
-    # check if the number of booking is higher than 12 places
     try:
         if competition["Reservations"][club["name"]] + places_required*point_per_place <= 12:
             competition["Reservations"][club["name"]] += places_required
@@ -110,7 +94,6 @@ def purchasePlaces():
         
     except KeyError:
         if places_required <= 12:
-            print("10")
             competition['Reservation'][club['name']] = places_required  
             
     club['points'] = int(club['points']) - places_required*point_per_place
@@ -121,6 +104,8 @@ def purchasePlaces():
     flash(f"Great Booking complete! Your purchased {places_required*point_per_place} for the competition {competition['name']}!")
     return render_template('welcome.html', club=club, competitions=all_competitions) 
 
+    # check if club as enough points
+    
     # check if there is enough place available  
 
 @app.route("/points_display_board", methods=['GET'])
@@ -134,11 +119,5 @@ def points_display_board():
     return render_template('points_display_board.html', headings=headings, data=data)
     
 @app.route("/logout")
-def logout():
-    return redirect(url_for('index'))
-
-
-
-@app.route('/logout')
 def logout():
     return redirect(url_for('index'))
