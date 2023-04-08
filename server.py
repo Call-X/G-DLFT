@@ -75,18 +75,35 @@ def book(competition,club):
                                       
 @app.route("/purchasePlaces",methods=['POST'])
 def purchasePlaces():
+    point_per_place = 3
     competition = [c for c in all_competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     places_required = int(request.form['places'])
     competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-places_required
 
     if has_happened(competition):
-        print("5")
         flash("This competition already happened !")
         return render_template('welcome.html', club=club, competitions=all_competitions)
-    else:
-        flash('Great-booking complete!')
-        return render_template('welcome.html', club=club, competitions=all_competitions)
+
+    try:
+        if competition["Reservations"][club["name"]] + places_required*point_per_place <= 12:
+            competition["Reservations"][club["name"]] += places_required
+        else:
+            flash("You can't book more than 12 places per competion ")
+            return render_template('welcome.html', club=club, competitions=all_competitions)    
+        
+    except KeyError:
+        if places_required <= 12:
+            print("10")
+            competition['Reservation'][club['name']] = places_required  
+            
+    club['points'] = int(club['points']) - places_required*point_per_place
+    serializeClub(club)
+    competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - places_required
+    serializeCompetition(competition)
+    
+    flash(f"Great Booking complete! Your purchased {places_required*point_per_place} for the competition {competition['name']}!")
+    return render_template('welcome.html', club=club, competitions=all_competitions) 
 
     # check if club as enough points
     
