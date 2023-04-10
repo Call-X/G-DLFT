@@ -88,8 +88,11 @@ def purchasePlaces():
     competition = [c for c in all_competitions if c['name'] == request.form['competition']][0]
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     places_required = int(request.form['places'])
-    competition['numberOfPlaces'] = int(competition['numberOfPlaces'])-places_required
 
+    if places_required < 0:
+        flash("the number of the purchase should be positive")
+        return render_template('welcome.html', club=club, competitions=all_competitions,club_list=clubs)
+    
     # check if club as enough points
     if int(club['points']) == 0 or int(club['points']) - places_required*point_per_place < 0:
         flash("Your club doesn't have enough point !")
@@ -99,16 +102,15 @@ def purchasePlaces():
     if int(competition['numberOfPlaces']) < places_required:
         flash("There are not enough places in this competition which are avaible !")
         return render_template('welcome.html', club=club, competitions=all_competitions, club_list=clubs)
-
-    # check if the competion is passed
+    
     if has_happened(competition):
         flash("This competition already happened !")
         return render_template('welcome.html', club=club, competitions=all_competitions)
-
-    # check if the number of booking is higher than 12 places
+    
     try:
         if competition["Reservations"][club["name"]] + places_required*point_per_place <= 12:
             competition["Reservations"][club["name"]] += places_required
+            
         else:
             flash("You can't book more than 12 places per competion ")
             return render_template('welcome.html', club=club, competitions=all_competitions)    
@@ -135,9 +137,5 @@ def points_display_board():
     return render_template('points_display_board.html', headings=headings, data=data)
     
 @app.route("/logout")
-def logout():
-    return redirect(url_for('index'))
-
-@app.route('/logout')
 def logout():
     return redirect(url_for('index'))

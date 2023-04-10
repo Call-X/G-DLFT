@@ -2,13 +2,20 @@
     "competitions": [
         {
             "name": "Spring Festival",
-            "date": "2020-03-27 10:00:00",
-            "numberOfPlaces": "25"
+            "date": "2027-03-27 10:00:00",
+            "numberOfPlaces": "20",
+            "Reservation": "{'Simply Lift': 5}"
         },
         {
             "name": "Fall Classic",
+            "date": "2024-10-25 13:30:00",
+            "numberOfPlaces": "4"
+        },
+        {
+            "name": "Fall Past",
             "date": "2020-10-22 13:30:00",
-            "numberOfPlaces": "13"
+            "numberOfPlaces": "1",
+            "Reservation": {}
         }
     ]
 }
