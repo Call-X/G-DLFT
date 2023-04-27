@@ -6,7 +6,6 @@
   </head>
   <body>
     <table>
-      <a href="{{url_for('index')}}">HOME</a>
       <h1>Clubs Points</h1>
       <tr>
         {% for header in headings %}
@@ -21,5 +20,6 @@
       </tr>
       {% endfor %}
     </table>
+    <a href="{{ url_for('index') }}">home</a>
   </body>
 </html>

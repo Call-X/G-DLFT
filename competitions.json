@@ -3,19 +3,24 @@
         {
             "name": "Spring Festival",
             "date": "2027-03-27 10:00:00",
-            "numberOfPlaces": "20",
-            "Reservation": "{'Simply Lift': 5}"
+            "numberOfPlaces": "1",
+            "Reservations": {
+                "Iron Temple": 3
+            }
         },
         {
             "name": "Fall Classic",
             "date": "2024-10-25 13:30:00",
-            "numberOfPlaces": "4"
+            "numberOfPlaces": "15",
+            "Reservations": {
+                "Iron Temple": 12
+            }
         },
         {
             "name": "Fall Past",
             "date": "2020-10-22 13:30:00",
             "numberOfPlaces": "1",
-            "Reservation": {}
+            "Reservations": {}
         }
     ]
 }

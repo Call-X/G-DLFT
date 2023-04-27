@@ -1,27 +1,26 @@
 import json
 from flask import Flask,render_template,request,redirect,flash,url_for
-import os
 import datetime
+import environ
+from pathlib import Path
 
-base_dir = f"{os.path.dirname(os.path.abspath(__file__))}/"
 
-def loadClubs(file_path=f"{base_dir}clubs.json"):
-    with open(file_path) as c:
+project_dir = Path(__file__).parent
+env = environ.Env()
+environ.Env.read_env(env_file=str(project_dir / ".env"))
+
+def loadClubs():
+    with open(project_dir / 'clubs.json') as c:
         listOfClubs = json.load(c)['clubs']
-        for club in listOfClubs:
-            club['points'] = int(club['points'])
         return listOfClubs
 
-def loadCompetitions(file_path=f"{base_dir}competitions.json"):
-    with open(file_path) as comps:
-        listOfCompetitions = json.load(comps)['competitions']
-        for competition in listOfCompetitions:
-            if not "Reservation" in competition:
-                competition["Reservation"] = {}
+def loadCompetitions():
+    with open(project_dir / 'competitions.json') as competitions:
+        listOfCompetitions = json.load(competitions)['competitions']
         return listOfCompetitions
     
 def serializeClub(club_to_save, filename="clubs.json"):
-    with open(filename, 'r+') as f:
+    with open(project_dir/filename, 'r+') as f:
         data = json.load(f)
         clubs = data['clubs']
         for club in clubs:
@@ -32,13 +31,13 @@ def serializeClub(club_to_save, filename="clubs.json"):
         f.truncate()
         
 def serializeCompetition(comp_to_save, filename="competitions.json"):
-    with open(filename, 'r+') as f:
+    with open(project_dir/filename, 'r+') as f:
         data = json.load(f)
         competitions = data['competitions']
         for competition in competitions:
             if competition['name'] == comp_to_save['name']:
                 competition['numberOfPlaces'] = str(comp_to_save['numberOfPlaces'])
-                competition['Reservation'] = str(comp_to_save['Reservation'])
+                competition['Reservations'] = (comp_to_save['Reservations'])
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
@@ -48,11 +47,15 @@ def has_happened(competition):
     year, month, day = competition_date.split("-")
     if datetime.datetime(int(year), int(month), int(day)) < datetime.datetime.now():
         return True
-    
+ 
 all_competitions = loadCompetitions()
-clubs = loadClubs()
+clubs = loadClubs()   
 app = Flask(__name__)
-app.secret_key = '192b9bdd12ab9ad4d12e236c78afcc9a343ec15f71bbf5dc987d54727823xcbf'
+app.config.update(
+    SECRET_KEY=env("SECRET_KEY"),
+    DEBUG=env("DEBUG"),
+    use_reloader=True,
+)
 
 @app.errorhandler(500)
 def internal_server_error(e):
@@ -108,23 +111,26 @@ def purchasePlaces():
         return render_template('welcome.html', club=club, competitions=all_competitions)
     
     try:
-        if competition["Reservations"][club["name"]] + places_required*point_per_place <= 12:
+        if competition["Reservations"][club["name"]] + places_required <= 12 and places_required <= 12:
             competition["Reservations"][club["name"]] += places_required
-            
+         
         else:
-            flash("You can't book more than 12 places per competion ")
+            flash("You can't book more than 12 places per competition")
             return render_template('welcome.html', club=club, competitions=all_competitions)    
         
     except KeyError:
         if places_required <= 12:
-            competition['Reservation'][club['name']] = places_required  
+            competition['Reservations'][club['name']] = places_required  
+        else:
+            flash("You can't book more than 12 places per competition")
+            return render_template('welcome.html', club=club, competitions=all_competitions) 
             
     club['points'] = int(club['points']) - places_required*point_per_place
     serializeClub(club)
     competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - places_required
     serializeCompetition(competition)
     
-    flash(f"Great Booking complete! Your purchased {places_required*point_per_place} for the competition {competition['name']}!")
+    flash(f"Great Booking complete! You purchased {places_required} for the {competition['name']}!")
     return render_template('welcome.html', club=club, competitions=all_competitions) 
 
 @app.route("/points_display_board", methods=['GET'])
@@ -139,3 +145,4 @@ def points_display_board():
 @app.route("/logout")
 def logout():
     return redirect(url_for('index'))
+    
